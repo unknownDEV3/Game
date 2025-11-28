@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden; /* Prevent scrollbars from canvas */
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        #content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* Glassmorphism subtle effect for readability if stars get too bright, 
+           though the original image is stark black/white */
+        .glass-panel {
+            backdrop-filter: blur(2px); 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Animation -->
+    <div id="canvas-container">
+        <canvas id="starfield"></canvas>
+    </div>
+
+    <!-- UI Content -->
+    <div id="content" class="px-6 py-8 md:px-12 md:py-10">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-start w-full">
+            <!-- Empty left side to balance or could be hidden -->
+            <div class="w-8 hidden md:block"></div> 
+
+            <!-- Top Center Icon (Paper Plane / Rocket) -->
+            <div class="flex-grow flex justify-center">
+                <i data-lucide="send" class="w-8 h-8 text-white transform -rotate-45 translate-y-2"></i>
+            </div>
+
+            <!-- Hamburger Menu -->
+            <button class="text-white hover:text-gray-300 transition-colors">
+                <i data-lucide="menu" class="w-8 h-8"></i>
+            </button>
+        </header>
+
+        <!-- Main Center Content -->
+        <main class="flex flex-col items-center justify-center text-center flex-grow mt-[-40px]">
+            
+            <!-- Countdown Timer -->
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16 mb-8 select-none">
+                <!-- Days -->
+                <div class="flex flex-col items-center">
+                    <span id="days" class="text-5xl md:text-7xl font-black tracking-tighter">00</span>
+                    <span class="text-gray-400 text-sm md:text-base font-medium mt-2">days</span>
+                </div>
+                <!-- Hours -->
+                <div class="flex flex-col items-center">
+                    <span id="hours" class="text-5xl md:text-7xl font-black tracking-tighter">00</span>
+                    <span class="text-gray-400 text-sm md:text-base font-medium mt-2">hours</span>
+                </div>
+                <!-- Minutes -->
+                <div class="flex flex-col items-center">
+                    <span id="minutes" class="text-5xl md:text-7xl font-black tracking-tighter">00</span>
+                    <span class="text-gray-400 text-sm md:text-base font-medium mt-2">minutes</span>
+                </div>
+                <!-- Seconds -->
+                <div class="flex flex-col items-center">
+                    <span id="seconds" class="text-5xl md:text-7xl font-black tracking-tighter">00</span>
+                    <span class="text-gray-400 text-sm md:text-base font-medium mt-2">seconds</span>
+                </div>
+            </div>
+
+            <!-- Text -->
+            <h1 class="serif-font text-2xl md:text-3xl font-normal mb-12 tracking-wide">
+                Something big is Coming Soon!
+            </h1>
+
+            <!-- Button -->
+            <a href="#" class="inline-block border-2 border-white rounded-full px-8 py-3 text-sm font-bold tracking-wider hover:bg-white hover:text-black transition-all duration-300">
+                Go back to our Homepage
+            </a>
+
+        </main>
+
+        <!-- Footer Spacer (to ensure centering mimics image) -->
+        <div class="h-10"></div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        /* -------------------------------------------------------------------------- */
+        /* COUNTDOWN LOGIC                              */
+        /* -------------------------------------------------------------------------- */
+        const countdownDate = new Date();
+        // Set date to approx 273 days from now to match image feel
+        countdownDate.setDate(countdownDate.getDate() + 273); 
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = countdownDate - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = days.toString().padStart(2, '0');
+            document.getElementById("hours").innerText = hours.toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = minutes.toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = seconds.toString().padStart(2, '0');
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        /* -------------------------------------------------------------------------- */
+        /* STARFIELD ANIMATION                            */
+        /* -------------------------------------------------------------------------- */
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let stars = [];
+        // Adjust these for density and speed
+        const starCount = 300; 
+        const speed = 0.5; // Controls how fast the "warp" feels
+        
+        // Resize canvas to full window
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            // Re-center stars origin if needed, but simple coord system works best
+            // with center at w/2, h/2
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Star {
+            constructor() {
+                this.init(true);
+            }
+
+            // 'random' param determines if star starts at random z or far away
+            init(random) {
+                this.x = (Math.random() - 0.5) * width * 2; // Spread wider than screen
+                this.y = (Math.random() - 0.5) * height * 2;
+                this.z = random ? Math.random() * width : width;
+                this.pz = this.z; // Previous Z (for drawing trails)
+            }
+
+            update() {
+                // Move star closer
+                this.z -= 15 * speed; // Speed multiplier
+                
+                // Reset if it passes the screen
+                if (this.z < 1) {
+                    this.init(false);
+                    this.pz = this.z;
+                }
+            }
+
+            draw() {
+                // Map 3D coordinates to 2D screen
+                // Simple perspective projection: x' = x / z
+                
+                // Current position
+                let sx = (this.x / this.z) * (width / 2) + (width / 2);
+                let sy = (this.y / this.z) * (height / 2) + (height / 2);
+
+                // Previous position (for trail effect)
+                let px = (this.x / this.pz) * (width / 2) + (width / 2);
+                let py = (this.y / this.pz) * (height / 2) + (height / 2);
+
+                this.pz = this.z;
+
+                // Don't draw if outside screen (optimization)
+                if (sx < 0 || sx > width || sy < 0 || sy > height) return;
+
+                // Calculate size based on proximity (closer = bigger)
+                // In warp speed, size matters less than trail length
+                const r = (1 - this.z / width) * 2; 
+
+                // Draw the trail
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(sx, sy);
+                
+                // Color logic: Fades out as it spawns, brightens as it gets close
+                const alpha = (1 - this.z / width);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = r > 0 ? r : 0.1;
+                ctx.stroke();
+            }
+        }
+
+        // Initialize stars
+        for (let i = 0; i < starCount; i++) {
+            stars.push(new Star());
+        }
+
+        // Animation Loop
+        function animate() {
+            // Clear background with slight opacity for trail effect? 
+            // No, standard clearRect for sharp warp lines like the image.
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, width, height);
+
+            // Center Reference (optional, makes it look like we are aiming at center)
+            const cx = width / 2;
+            const cy = height / 2;
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+
